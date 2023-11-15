@@ -1,5 +1,5 @@
 from unittest.mock import patch
-from utils.url_checker import is_url_accessible
+from test_functions_unused.test_functions import is_url_accessible
 
 def test_is_url_accessible():
     with patch('requests.head') as mocked_head:
