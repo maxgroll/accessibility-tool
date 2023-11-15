@@ -1,15 +1,13 @@
 #utils/helpers.py
 import validators
 import requests
-
-from datetime import datetime
 import os
+from datetime import datetime
+from urllib.parse import urlparse, urlunparse
 
-from urllib.parse import urlparse
 
 
-
-def is_url_accessible(url):
+def is_url_accessible(url) -> bool:
     """Check if the given URL is accessible.
 
     Args:
@@ -18,13 +16,16 @@ def is_url_accessible(url):
     Returns:
         bool: True if the URL is accessible, False otherwise.
     """
+        # pass the url into
+        # request.head
     try:
-        response = requests.head(url, allow_redirects=True)
+        response = requests.get(url, stream=True, timeout=10)
+        response.close()  # Make sure to close the response
         return response.status_code == 200
     except requests.RequestException:
         return False
     
-def is_valid_url(url, base_url):
+def is_valid_url(url, base_url) -> bool:
     """
     Validates the given URL and checks it against certain patterns to filter out.
     
@@ -35,46 +36,45 @@ def is_valid_url(url, base_url):
     Returns:
         bool: True if the URL is valid and doesn't match filtered patterns, False otherwise.
     """
+
+
+    parsed_url = urlparse(url)
+    cleaned_url = urlunparse((parsed_url.scheme, parsed_url.netloc, parsed_url.path, '', '', ''))
+
     # Check if URL is valid
-    if not validators.url(url):
+    if not validators.url(cleaned_url):
         return False
 
-    # Check if URL is an internal anchor or empty
-    if url.startswith('#') or not url.strip():
-        return False
-
-    # Check if URL is a parametrized search URL
-    if any(param in url for param in ['?q=', '?search=', '&q=', '&search=', '#']):
+    # Check if URL has a fragment (anchor) or query parameters
+    if parsed_url.fragment or parsed_url.query:
         return False
 
     # Check if URL is within the same base URL
-    if not url.startswith(base_url):
+    if not cleaned_url.startswith(base_url):
         return False
-
-    return True
-
-def url_to_dir_name(url):
-    """
-    Converts a URL to a directory-friendly name by removing non-alphanumeric characters.
-
-    Args:
-        url (str): The URL to convert.
-
-    Returns:
-        str: A directory-friendly version of the URL.
-    """
-    # Remove all non-alphanumeric characters (excluding periods and slashes)
-    url = url.replace('http://', '').replace('https://', '')
-
-    # Ersetzen von Punkten und anderen Nicht-Buchstaben/Zahlen durch Unterstriche
-    url = ''.join('_' if not e.isalnum() else e for e in url).strip('_')
-
-    #timestamp = datetime.now().strftime("%Y-%m-%d____%H-%M")
-    #return f"{url}{timestamp}"
-    return url
+    return cleaned_url.startswith(base_url)
 
 
-def create_test_directory(url):
+    # Check if URL is valid
+    #if not validators.url(url):
+        #return False
+
+    # Check if URL is an internal anchor or empty
+    #if url.startswith('#') or not url.strip():
+        #return False
+
+    # Check if URL is a parametrized search URL
+    #if any(param in url for param in ['?q=', '?search=', '&q=', '&search=', '#']):
+        #return False
+
+    # Check if URL is within the same base URL
+    #if not url.startswith(base_url):
+        #return False
+
+    #return True
+
+
+def create_test_directory(url) -> str:
     """
     Creates a nested directory structure for test results based on the given URL.
     The structure will be: accessibility_results/domain/specific_page/timestamp/

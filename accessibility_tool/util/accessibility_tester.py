@@ -1,20 +1,25 @@
 # accessibility_tester.py
-
+import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from axe_selenium_python import Axe
+from typing import Dict, Optional
 from .results_processor import process_accessibility_results
 
 
-def run_accessibility_tests(url, test_directory):
+def run_accessibility_tests(url: str, test_directory: str) -> Optional[Dict]:
     """
-    Runs accessibility tests on a given URL using Axe with Selenium.
+    Runs accessibility tests on a given URL using Axe with Selenium and saves the results.
 
     Args:
         url (str): The URL to test for accessibility issues.
+        test_directory (str): The directory where the test results should be saved.
 
     Returns:
-        dict: The results of the accessibility tests.
+        Optional[Dict]: The results of the accessibility tests if successful, None otherwise.
+
+    Raises:
+        Exception: An error occurred while setting up WebDriver or running tests.
     """
     try:
         # Set up Chrome options for Selenium
@@ -35,7 +40,6 @@ def run_accessibility_tests(url, test_directory):
         results = axe.run()
 
         # Process results (e.g., save to a file or return them)
-        #process_accessibility_results(url, results)
         process_accessibility_results(url, results, test_directory)
 
         # Quit the driver
@@ -45,7 +49,9 @@ def run_accessibility_tests(url, test_directory):
 
     except Exception as e:
         print(f"Error occurred while running accessibility tests for {url}: {e}")
-        return {}
+        # Log the error for debugging purposes
+        logging.error(f"Accessibility testing error for {url}: {e}")
+        return None
 
 # This allows the module to be used both as a script and as an importable module
 if __name__ == "__main__":
