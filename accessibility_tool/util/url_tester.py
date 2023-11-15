@@ -1,15 +1,13 @@
 # url_tester.py
 
-#import validators
 from urllib.parse import urljoin
 from .accessibility_tester import run_accessibility_tests
 from .url_extractor import extract_urls
 from .helpers import is_valid_url
-
+from .helpers import create_test_directory
 import os
 
-
-def extract_and_test_urls(url, output_filename="extracted_urls.json"):
+def extract_and_test_urls(url):
     """
     Extracts URLs from a given base URL and performs accessibility tests on them.
     
@@ -22,35 +20,32 @@ def extract_and_test_urls(url, output_filename="extracted_urls.json"):
     """
     # Initialize set for storing tested URLs and list for URLs to test
     tested_urls = set()
-    urls_to_test = {url}  # Change to a set to prevent duplicates
 
     # Determine the base URL for resolving relative links
     base_url = urljoin(url, '/')
 
-    ############
+    # Set up the general directory to store accessibility test results
     general_test_dir = 'accessibility_results'
     os.makedirs(general_test_dir, exist_ok=True)
 
-    # Schritt 2: Erstellen des spezifischen Domainordners
-    #base_url = "https://otros.eu"
-    #domain_dir_name = url_to_dir_name(base_url)
-    #domain_test_dir = os.path.join(general_test_dir, domain_dir_name)
-    #os.makedirs(domain_test_dir, exist_ok=True)
-    #print(domain_test_dir)
-    ############
-
     # Loop through URLs to test
+    urls_to_test = {url}  # start with base url
     while urls_to_test:
         current_url = urls_to_test.pop()
 
         # Skip testing for certain conditions
         if current_url in tested_urls or not is_valid_url(current_url, base_url):
             continue
+            # ###Create a directory for this URL's test results
+        test_directory = create_test_directory(current_url)
+            #continue
 
-        # Add the current URL to the set of tested URLs
+        # Perform accessibility tests and handle exceptions
         try:
-            run_accessibility_tests(current_url)
+            #run_accessibility_tests(current_url)
+            run_accessibility_tests(current_url, test_directory)
             tested_urls.add(current_url)
+            # TODO: handle storing of test results here instead ofin accessibility tester?
         except Exception as e:
             print(f"Ein Fehler ist beim Testen der URL {current_url} aufgetreten: {e}")
 
@@ -63,8 +58,8 @@ def extract_and_test_urls(url, output_filename="extracted_urls.json"):
             if full_url not in tested_urls and is_valid_url(full_url, base_url):
                 urls_to_test.add(full_url)  # Add to set to prevent duplicates
 
-    # Save all tested URLs to a JSON file
-    #extracted_urls_to_json(list(tested_urls), output_filename)
+    # optionally ave all tested URLs to a JSON file
+    #helpers.extracted_urls_to_json(list(tested_urls), output_filename)
 
     # Return the results
     return {"tested_urls": list(tested_urls)}

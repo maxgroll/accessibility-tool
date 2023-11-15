@@ -5,6 +5,7 @@ import requests
 from datetime import datetime
 import os
 
+from urllib.parse import urlparse
 
 
 
@@ -73,31 +74,34 @@ def url_to_dir_name(url):
     return url
 
 
-def create_test_directory(base_url):
+def create_test_directory(url):
     """
-    Creates a directory for the base URL and a subdirectory for the current date and time.
-
+    Creates a nested directory structure for test results based on the given URL.
+    The structure will be: accessibility_results/domain/specific_page/timestamp/
+    
     Args:
-        base_url (str): The base URL for which to create the directory structure.
-
+        url (str): The full URL for which to create the directory structure.
+        
     Returns:
-        str: The path to the subdirectory for the current test.
+        str: The path to the directory for the specific test.
     """
-    # Convert the base URL to a directory-friendly name
-    dir_name = base_url.replace('http://', '').replace('https://', '').replace('www.', '')
-    dir_name = ''.join('_' if not e.isalnum() else e for e in dir_name).strip('_')
-
-    # Create the base directory if it doesn't exist
-    base_dir = os.path.join('accessibility_results', dir_name)
-    if not os.path.exists(base_dir):
-        os.makedirs(base_dir)
-
-    # Create a subdirectory with the current date and time
+    # Parse the base domain from the URL
+    parsed_url = urlparse(url)
+    domain = parsed_url.netloc.replace('www.', '')
+    
+    # Create a directory-friendly name for the specific page
+    specific_page = parsed_url.path.strip('/').replace('/', '_') or 'homepage'
+    
+    # Create a timestamp for uniqueness
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    test_dir = os.path.join(base_dir, timestamp)
-    os.makedirs(test_dir)
-
-    return test_dir
+    
+    # Combine all parts to create the nested directory structure
+    directory_path = os.path.join('accessibility_results', domain, specific_page, timestamp)
+    
+    # Create the directory if it doesn't exist
+    os.makedirs(directory_path, exist_ok=True)
+    
+    return directory_path
 
 
 

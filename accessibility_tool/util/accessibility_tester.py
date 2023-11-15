@@ -6,7 +6,7 @@ from axe_selenium_python import Axe
 from .results_processor import process_accessibility_results
 
 
-def run_accessibility_tests(url):
+def run_accessibility_tests(url, test_directory):
     """
     Runs accessibility tests on a given URL using Axe with Selenium.
 
@@ -35,7 +35,8 @@ def run_accessibility_tests(url):
         results = axe.run()
 
         # Process results (e.g., save to a file or return them)
-        process_accessibility_results(url, results)
+        #process_accessibility_results(url, results)
+        process_accessibility_results(url, results, test_directory)
 
         # Quit the driver
         driver.quit()
