@@ -3,3 +3,4 @@ __pycache__/
 .DS_Store
 accessibility_results/
 ../test_functions_unused/
+logs/
