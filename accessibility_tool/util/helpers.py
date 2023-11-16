@@ -2,12 +2,13 @@
 import validators
 import requests
 import os
+import logging
 from datetime import datetime
 from urllib.parse import urlparse, urlunparse
 
 
 
-def is_url_accessible(url) -> bool:
+def is_url_accessible(url: str) -> bool:
     """Check if the given URL is accessible.
 
     Args:
@@ -17,15 +18,16 @@ def is_url_accessible(url) -> bool:
         bool: True if the URL is accessible, False otherwise.
     """
         # pass the url into
-        # request.head
+        # request.get
     try:
         response = requests.get(url, stream=True, timeout=10)
         response.close()  # Make sure to close the response
         return response.status_code == 200
-    except requests.RequestException:
+    except requests.RequestException as e:
+        logging.error(f"Failed to access URL {url}: {e}")
         return False
     
-def is_valid_url(url, base_url) -> bool:
+def is_valid_url(url: str, base_url: str) -> bool:
     """
     Validates the given URL and checks it against certain patterns to filter out.
     
@@ -36,8 +38,6 @@ def is_valid_url(url, base_url) -> bool:
     Returns:
         bool: True if the URL is valid and doesn't match filtered patterns, False otherwise.
     """
-
-
     parsed_url = urlparse(url)
     cleaned_url = urlunparse((parsed_url.scheme, parsed_url.netloc, parsed_url.path, '', '', ''))
 
@@ -52,29 +52,11 @@ def is_valid_url(url, base_url) -> bool:
     # Check if URL is within the same base URL
     if not cleaned_url.startswith(base_url):
         return False
+    
     return cleaned_url.startswith(base_url)
 
 
-    # Check if URL is valid
-    #if not validators.url(url):
-        #return False
-
-    # Check if URL is an internal anchor or empty
-    #if url.startswith('#') or not url.strip():
-        #return False
-
-    # Check if URL is a parametrized search URL
-    #if any(param in url for param in ['?q=', '?search=', '&q=', '&search=', '#']):
-        #return False
-
-    # Check if URL is within the same base URL
-    #if not url.startswith(base_url):
-        #return False
-
-    #return True
-
-
-def create_test_directory(url) -> str:
+def create_test_directory(url: str) -> str:
     """
     Creates a nested directory structure for test results based on the given URL.
     The structure will be: accessibility_results/domain/specific_page/timestamp/
