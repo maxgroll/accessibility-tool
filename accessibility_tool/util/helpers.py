@@ -4,8 +4,10 @@ import requests
 import os
 import logging
 from datetime import datetime
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse, urlunparse, urljoin
 
+import json
+from bs4 import BeautifulSoup
 
 
 def is_url_accessible(url: str) -> bool:
@@ -19,6 +21,14 @@ def is_url_accessible(url: str) -> bool:
     """
         # pass the url into
         # request.get
+
+    ########
+    if not url.startswith(('http://', 'https://')):
+        return False
+
+
+
+
     try:
         response = requests.get(url, stream=True, timeout=10)
         response.close()  # Make sure to close the response
@@ -85,5 +95,36 @@ def create_test_directory(url: str) -> str:
     
     return directory_path
 
+#TODO maybe use to get a list of urls and use it to make the selection on ui
+def extracted_urls_to_json(url, filename):
+    """
+    Saves a list of URLs to a JSON file.
 
+    Args:
+        urls (list): A list of URLs to save.
+        filename (str): The name of the file to save the URLs to.
+    """
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, "html.parser")
+    extracted_urls = set()
+    ordered_urls = []
 
+    base_url = urljoin(url, '/')
+    
+    # Extract URLs from anchor tags
+    for anchor in soup.find_all("a"):
+        href = anchor.get("href")
+        if href and "#" not in href and not href.endswith((".jpg", 
+                                                           ".jpeg", ".png", ".gif")):
+            extracted_url = urljoin(url, href)
+            if extracted_url.startswith(base_url):
+                extracted_urls.add(extracted_url)
+
+    ordered_urls = [base_url] + list(extracted_urls - {base_url})
+
+    with open(filename, 'w') as file:
+        # Save results in JSON format
+            file.write(json.dumps(ordered_urls, indent=4))
+            file.write('\n')
+    
+    return None
