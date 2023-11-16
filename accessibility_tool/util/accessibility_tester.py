@@ -48,7 +48,6 @@ def run_accessibility_tests(url: str, test_directory: str) -> Optional[Dict]:
         return results
 
     except Exception as e:
-        print(f"Error occurred while running accessibility tests for {url}: {e}")
         # Log the error for debugging purposes
         logging.error(f"Accessibility testing error for {url}: {e}")
         return None
