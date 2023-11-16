@@ -1,4 +1,4 @@
-# new_tool.py
+# web_accessibility_checker.py
 
 import logging
 import os
