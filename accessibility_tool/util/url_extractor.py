@@ -1,25 +1,32 @@
 # url_extractor.py
 
 import requests
+import logging
+from typing import List
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 
-def extract_urls(url, base_url=None):
+def extract_urls(url: str, base_url: str = None) -> List[str]:
     """
     Extracts all hyperlinked URLs from a given webpage.
 
     Args:
         url (str): The URL of the webpage to extract links from.
-        base_url (str): The base URL to resolve relative links against.
+        base_url (str, optional): The base URL to resolve relative links against. Defaults to None.
 
     Returns:
-        list: A list of absolute URLs.
+        List[str]: A list of absolute URLs extracted from the page.
     """
     if base_url is None:
         base_url = url
 
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+    except Exception as e:
+        logging.error(f"Error occurred while requesting URL {url}: {e}")
+        return []
+
     urls = []
 
     for link in soup.find_all('a', href=True):

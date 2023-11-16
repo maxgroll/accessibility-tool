@@ -38,7 +38,7 @@ def extract_and_test_urls(url: str) -> Dict[str, List[str]]:
     urls_to_test = {url}  # start with base url
     while urls_to_test:
         current_url = urls_to_test.pop()
-        print(f"Testing {current_url}")
+        #print(f"Testing {current_url}")
         # Skip testing for certain conditions
         if current_url in tested_urls or not is_valid_url(current_url, base_url):
             continue
