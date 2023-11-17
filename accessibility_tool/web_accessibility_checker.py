@@ -5,7 +5,7 @@ import logging
 import os
 import streamlit as st
 from typing import Optional, List, Dict
-from util.extractor_test import extract_all_urls
+from util.extract_urls_for_tests import extract_all_urls
 from util.helpers import create_test_directory
 from util.accessibility_tester import run_accessibility_tests
 from util.helpers import is_url_accessible
