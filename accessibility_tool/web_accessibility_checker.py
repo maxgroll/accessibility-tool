@@ -1,10 +1,13 @@
 # web_accessibility_checker.py
 
+import validators
 import logging
 import os
-import validators
 import streamlit as st
-from util.url_tester import extract_and_test_urls
+from typing import Optional, List, Dict
+from util.extractor_test import extract_all_urls
+from util.helpers import create_test_directory
+from util.accessibility_tester import run_accessibility_tests
 from util.helpers import is_url_accessible
 
 # configuration of logging system
@@ -20,49 +23,62 @@ logging.basicConfig(level=logging.INFO,
                         logging.StreamHandler()  # Fehlermeldungen werden auch in der Konsole ausgegeben.
                     ])
 
+# Set up the general directory to store accessibility test results
+general_test_dir = 'accessibility_results'
+os.makedirs(general_test_dir, exist_ok=True)
+
 def main():
     """
     Main function to run the Streamlit app interface for the Web Accessibility Checker.
 
     This function sets up the Streamlit interface, takes user input for the URL to be tested,
-    validates the URL, checks its accessibility, and then runs accessibility tests if the URL is valid and accessible.
-    Results are displayed in the Streamlit interface.
+    validates the URL, checks its accessibility, and then runs accessibility tests on each if the URLs 
+    that is valid and accessible.
     """
-
     st.title("Web Accessibility Checker")
-
-    # Setup a placeholder for user feedback
-    feedback = st.empty()
 
     # Get user input
     url = st.text_input("Enter the URL of the website to check")
 
-    # Check accessibility and extract URLs when the user clicks the 
-    # "Check Accessibility" button or enters a URL
-    if st.button("Check Accessibility") or url:
+    # Button to find all URLs on the given page
+    if st.button("Find URLs") or url:
         if not validators.url(url):
-            feedback.error("Please provide a valid URL")
+            st.error("Please provide a valid URL")
+        elif not is_url_accessible(url):
+            st.error("The URL is not accessible. Please check the URL and try again.")
             return  # Exit the function early
+        else:
+            try:
+                extracted_urls = set(extract_all_urls(url))
+                if extracted_urls:
+                    st.success("Accessible URLs found. Please select the URLs to test.")
+                    # Display URLs as a multiselect widget
+                    selected_urls: List[str] = st.multiselect("Select URLs to test", options=list(extracted_urls), default=list(extracted_urls))
+                    # Button to run tests on selected URLs
+                    if st.button("Run Accessibility Tests"):
+                        logging.info(f"Starting accessibility Tests from: {url}")
+                        if selected_urls:
+                            results: Optional[Dict] = {}
+                            # Loop through the list of selected URLs, create a directory for each URL's test results, and run accessibility tests
+                            for single_url in selected_urls:
+                                test_directory = create_test_directory(single_url)
+                                results[single_url] = run_accessibility_tests(single_url, test_directory)
 
-        feedback.info("Checking URL accessibility...")
-        if not is_url_accessible(url):
-            feedback.error("The URL is not accessible. Please check the URL and try again.")
-            return  # Exit the function early
+                            if results:
+                                st.success("Accessibility tests completed")
+                                logging.info(f"Finished accessibility Tests from: {url} \n {len(selected_urls)} URLs tested: {selected_urls}")
+                                
+                                #st.json(results)
+                            else:
+                                st.error("An error occurred while checking the selected URLs.")
+                        else:
+                            st.error("No URLs selected for testing.")
+                else:
+                    st.error("No accessible URLs found on the page.")
+            except Exception as e:
+                st.error("An unexpected error occurred. Please try again later.")
+                logging.error(f"Unexpected error during URL extraction: {e}")
 
-        feedback.info("URL is accessible. Running accessibility tests...")
-
-        try:
-            # Extract and test URLs
-            results = extract_and_test_urls(url)
-            if results:
-                feedback.success("Accessibility check completed")
-                st.json(results)
-            else:
-                feedback.error("An error occurred while checking the website")
-                logging.error("No results were returned from extract_and_test_urls.")
-        except Exception as e:
-            feedback.error("An unexpected error occurred during the accessibility check. Please try again later.")
-            logging.error(f"Unexpected error during accessibility checks: {e}")
 
 if __name__ == "__main__":
     main()
