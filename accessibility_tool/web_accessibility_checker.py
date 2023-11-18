@@ -2,30 +2,17 @@
 
 import validators
 import logging
-import os
+#import os
 import streamlit as st
 from typing import Optional, List, Dict
+
+from data.config import setup_directories, setup_logging
 from util.extract_urls_for_tests import extract_all_urls
-from util.helpers import create_test_directory
 from util.accessibility_tester import run_accessibility_tests
-from util.helpers import is_url_accessible
+from util import is_url_accessible, create_test_directory
 
-# configuration of logging system
-log_directory = "logs"
-os.makedirs(log_directory, exist_ok=True)  # Erstellt den Ordner, falls er noch nicht existiert
-
-log_file_path = os.path.join(log_directory, "debug.log")
-
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s %(levelname)s %(message)s',
-                    handlers=[
-                        logging.FileHandler(log_file_path),  # Fehlermeldungen werden in debug.log gespeichert.
-                        logging.StreamHandler()  # Fehlermeldungen werden auch in der Konsole ausgegeben.
-                    ])
-
-# Set up the general directory to store accessibility test results
-general_test_dir = 'accessibility_results'
-os.makedirs(general_test_dir, exist_ok=True)
+setup_directories()
+setup_logging()
 
 def main():
     """
