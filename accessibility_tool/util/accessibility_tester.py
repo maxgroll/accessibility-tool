@@ -1,11 +1,11 @@
 # accessibility_tester.py
+
 import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from axe_selenium_python import Axe
 from typing import Dict, Optional
 from .results_processor import process_accessibility_results
-
 
 def run_accessibility_tests(url: str, test_directory: str) -> Optional[Dict]:
     """

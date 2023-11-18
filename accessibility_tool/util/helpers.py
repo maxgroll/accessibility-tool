@@ -1,13 +1,14 @@
 #utils/helpers.py
+
 import validators
 import requests
 import os
 import logging
+import json
 from datetime import datetime
 from urllib.parse import urlparse, urlunparse, urljoin
-
-import json
 from bs4 import BeautifulSoup
+from data.config import FULL_ACCESSIBILITY_RESULTS_DIRECTORY
 
 
 def is_url_accessible(url: str) -> bool:
@@ -18,16 +19,9 @@ def is_url_accessible(url: str) -> bool:
 
     Returns:
         bool: True if the URL is accessible, False otherwise.
-    """
-        # pass the url into
-        # request.get
-
-    ########
+    """ 
     if not url.startswith(('http://', 'https://')):
         return False
-
-
-
 
     try:
         response = requests.get(url, stream=True, timeout=10)
@@ -88,7 +82,7 @@ def create_test_directory(url: str) -> str:
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
     # Combine all parts to create the nested directory structure
-    directory_path = os.path.join('accessibility_results', domain, specific_page, timestamp)
+    directory_path = os.path.join(FULL_ACCESSIBILITY_RESULTS_DIRECTORY, domain, specific_page, timestamp)
     
     # Create the directory if it doesn't exist
     os.makedirs(directory_path, exist_ok=True)
