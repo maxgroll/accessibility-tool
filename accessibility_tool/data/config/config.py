@@ -18,13 +18,14 @@ def setup_logging() -> None:
     session_log_file_name = f"session_debug_{timestamp}.log"
     session_log_file_path = os.path.join(FULL_LOGS_DIRECTORY, session_log_file_name)
 
-    logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s %(levelname)s %(message)s',
-                        handlers=[
-                            logging.FileHandler(main_log_file_path),  # Schreibt in die Haupt-Log-Datei
-                            logging.FileHandler(session_log_file_path),  # Schreibt in die session-spezifische Log-Datei
-                            logging.StreamHandler()  # Schreibt in die Konsole
-                        ])
+    if not logging.getLogger().handlers:
+        logging.basicConfig(level=logging.INFO,
+                            format='%(asctime)s %(levelname)s %(message)s',
+                            handlers=[
+                                logging.FileHandler(main_log_file_path),  # Schreibt in die Haupt-Log-Datei
+                                logging.FileHandler(session_log_file_path),  # Schreibt in die session-spezifische Log-Datei
+                                logging.StreamHandler()  # Schreibt in die Konsole
+                            ])
 
 def setup_directories() -> None:
     """
