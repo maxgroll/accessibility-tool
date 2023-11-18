@@ -4,7 +4,7 @@ import logging
 from urllib.parse import urljoin
 from typing import Set
 from .url_extractor import extract_urls
-from .helpers import is_valid_url
+from util import is_valid_url
 
 def extract_all_urls(url: str) -> Set[str]:
     """
