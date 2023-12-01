@@ -8,9 +8,7 @@ from typing import List
 
 from data.config import setup_directories, setup_logging
 from util import is_url_accessible
-from util import WebsiteCrawler
-from util import SitemapParser
-from util import AccessibilityTester
+from util import WebsiteCrawler, SitemapParser, AccessibilityTester
 
 # Setup logging and directories
 setup_directories()
@@ -27,7 +25,7 @@ def main():
     st.title("Web Accessibility Checker")
 
     # Get user input: URL and crawl_depth
-    with st.form(key='find_urls_form'):
+    with st.form(key='find_urls_form', clear_on_submit=True):
         url = st.text_input(label='Enter the URL of the website to check')
         # Add a number input for crawl depth
         crawl_depth = st.number_input('Set Crawl Depth', min_value=1, value=3)  # default value is 3
@@ -37,7 +35,7 @@ def main():
     if "extracted_urls" not in st.session_state:
         st.session_state.extracted_urls = set()
 
-    # Initialize sessio state for test choice and choice made
+    # Initialize session state for test choice and choice made
     if "test_choice" not in st.session_state:
         st.session_state.test_choice = "Test only homepage"
     if "choice_made" not in st.session_state:
@@ -56,16 +54,17 @@ def main():
         # Validation of provided URL
         if not validators.url(url):
             st.error("Please provide a valid URL")
-            return
+            return # Exit the function early
         elif not is_url_accessible(url):
             st.error("The URL is not accessible. Please check the URL and try again.")
             return  # Exit the function early
-        ######
+        #set the base-url
         parsed_url = urlparse(url)
         base_url = f"{parsed_url.scheme}://{parsed_url.netloc}/"
         # Use the extracted URLs from the session state if available
         if st.session_state.extracted_urls:
             extracted_urls = st.session_state.extracted_urls
+            st.info(f"Using extracted URLs from {base_url}", icon="ℹ️")
         else:
             try:
                 # Instantiate sitemap parser
@@ -90,17 +89,17 @@ def main():
                         extracted_urls = crawler.crawl_urls_to_test(base_url, crawl_depth)
                 # Add extracted URLs to session state
                 st.session_state.extracted_urls = extracted_urls
-                st.success("Accessible URLs found. Please select the URLs to test.")
+                st.success(f"Accessible URLs found on {base_url}. Please select the URLs to test.")
             except Exception as e:
                 st.error("An unexpected error occurred. Please try again later.")
                 logging.error(f"Unexpected error during URL extraction: {e}")
                 return
         # Radio button for user to chosse test type
-        with st.form(key='test_choice_form'):
+        with st.form(key='test_choice_form', clear_on_submit=True):
             test_choice = st.radio(
             "Select the URLs to test:",
             ('Test only homepage', 'Test all URLs', 'Select specific URLs'),
-            index=None, # Default selection is 'Test only homepage'
+            index=None, # Default selection is 'None'
         )
             choice_made = st.form_submit_button(label='Confirm Choice')
             
@@ -143,7 +142,7 @@ def main():
 
         if st.session_state.extracted_urls and st.session_state.choice_made and st.session_state.test_choice == 'Select specific URLs':
             # Show multiselect widget for selecting specific URLs
-            with st.form(key='run_tests_form'):
+            with st.form(key='run_tests_form', clear_on_submit=True):
                 selected_urls: List[str] = st.multiselect("Select URLs to test", options=list(extracted_urls), default=None)
                 run_tests_button = st.form_submit_button(label='Run Accessibility Tests')
 
