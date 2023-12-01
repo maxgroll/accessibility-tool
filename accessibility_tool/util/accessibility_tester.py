@@ -47,6 +47,7 @@ class AccessibilityTester:
             axe = Axe(driver)
             axe.inject()
             results = axe.run()
+            self.test_directory = create_test_directory(url)
             processor = ResultsProcessor(url, results, self.test_directory)
             processor.save_results_to_json()
             processor.save_results_to_csv()
@@ -56,14 +57,18 @@ class AccessibilityTester:
             logging.error(f"Accessibility testing error for {url}: {e}")
             return None
 
-    def test_one_url(self, homepage_url: str) -> Optional[Dict[str, Dict]]:
-        self.test_directory = create_test_directory(homepage_url)
-        return {homepage_url: self.run_accessibility_tests(homepage_url)} if homepage_url else None
+    def test_urls(self, urls: Set[str]) -> Optional[Dict[str, Dict]]:
+        """
+        Runs accessibility tests on one or multiple URLs.
 
-    def test_multiple_urls(self, multiple_urls: Set[str]) -> Optional[Dict[str, Dict]]:
+        Args:
+            urls (Set[str]): A set of URLs to test.
+
+        Returns:
+            Optional[Dict[str, Dict]]: A dictionary with URLs as keys and test results as values.
+        """
         results = {}
-        for url in multiple_urls:
-            self.test_directory = create_test_directory(url)
+        for url in urls:
             result = self.run_accessibility_tests(url)
             if result:
                 results[url] = result
