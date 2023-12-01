@@ -116,7 +116,7 @@ def main():
                 logging.info(f"Starting accessibility Tests from: {base_url}")
                 with st.spinner("Performing accessibility tests"):
                     if extracted_urls:
-                        results = tester.test_multiple_urls(extracted_urls)
+                        results = tester.test_urls(extracted_urls)
                     
                         if results:
                             st.success("Accessibility tests completed")
@@ -128,11 +128,14 @@ def main():
 
             if st.session_state.test_choice == 'Test only homepage':
                     # Logic to test only the homepage
+                    urls = set()
+                    urls.add(base_url)
                     logging.info(f"Starting accessibility Tests from: {base_url}")
                     #parsed_url = urlparse(url)
                     #homepage_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
                     with st.spinner("Performing accessibility tests on the homepage"):
-                        results = tester.test_one_url(base_url)
+                        if urls:
+                            results = tester.test_urls(urls)
 
                         if results:
                             st.success(f"Accessibility test for the homepage {base_url} completed")
@@ -151,7 +154,7 @@ def main():
                 logging.info(f"Starting accessibility Tests from: {base_url}")
                 with st.spinner("Performing accessibility tests"):
                     if selected_urls:
-                        results = tester.test_multiple_urls(selected_urls)
+                        results = tester.test_urls(selected_urls)
                     
                         if results:
                             st.success("Accessibility tests completed")
