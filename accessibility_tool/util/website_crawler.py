@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 from typing import Set
 import logging
 
-from util import is_valid_url
+from util.helpers import is_valid_url, can_fetch
 
 
 class WebsiteCrawler:
@@ -21,10 +21,12 @@ class WebsiteCrawler:
         hostname (str): The hostname of the root URL.
     """
 
-    def __init__(self, root_url: str):
-        self.root_url: str = root_url
+    def __init__(self, root_url: str, user_agent: str = 'DA Accessibility_tester'):
+        self.root_url = root_url
         self.crawled_urls: Set[str] = set()
-        self.hostname: str = urlparse(root_url).hostname
+        self.hostname = urlparse(root_url).hostname
+        self.user_agent = user_agent
+        self.session = requests.Session()  # Session for repeated requests
     
     def crawl(self, url: str, max_depth: int = 3, current_depth: int = 0) -> None:
         """
@@ -42,27 +44,12 @@ class WebsiteCrawler:
         if current_depth > max_depth:
             return
         
-        parsed_url = urlparse(url)
-        
-        # Ignore URLs that do not start with http or https
-        if parsed_url.scheme not in ['http', 'https']:
-            logging.info(f"Ignored non-http(s) URL: {url}")
-            return
-        # Ignore URLs that do not start with the root URLs
-        if not url.startswith(self.root_url):
-            logging.info(f"Ignored external URL: {url}")
-            return
-        # Ignore Urls with parameteres
-        if parsed_url.fragment or parsed_url.query:
-            logging.info(f"Ignored internal URL: {url}")
-            return
-
-        try:
-            response = requests.get(url)
-            if response.status_code == 200:
-                clean_url = urlparse(url)._replace(fragment='').geturl()
-                if clean_url not in self.crawled_urls and is_valid_url(clean_url, self.root_url):
-                #if clean_url not in self.crawled_urls:
+        if is_valid_url(url, self.root_url, self.session) and can_fetch(url,  self.user_agent):
+       
+            try:
+                response = self.session.get(url)
+                if response.status_code == 200:
+                    clean_url = urlparse(url)._replace(fragment='').geturl()
                     self.crawled_urls.add(clean_url)
                     logging.info(f"Added: {clean_url}")
                     soup = BeautifulSoup(response.content, "html.parser")
@@ -75,8 +62,8 @@ class WebsiteCrawler:
 
                         if new_url not in self.crawled_urls:
                             self.crawl(new_url, max_depth, current_depth + 1)
-        except requests.RequestException as e:
-            logging.info(f"Error crawling URL {url}: {e}")
+            except requests.RequestException as e:
+                logging.info(f"Error crawling URL {url}: {e}")
 
     def get_crawled_urls(self) -> Set[str]:
         """
