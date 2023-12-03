@@ -8,7 +8,8 @@ from typing import List
 
 from data.config import setup_directories, setup_logging
 from util import is_url_accessible
-from util import WebsiteCrawler, SitemapParser, AccessibilityTester
+from util import AccessibilityTester, WebsiteCrawler, SitemapParser
+
 
 # Setup logging and directories
 setup_directories()
@@ -89,15 +90,17 @@ def main():
                         extracted_urls = crawler.crawl_urls_to_test(base_url, crawl_depth)
                 # Add extracted URLs to session state
                 st.session_state.extracted_urls = extracted_urls
-                st.success(f"Accessible URLs found on {base_url}. Please select the URLs to test.")
+                st.success(f"{len(extracted_urls)} Accessible URLs found on {base_url}. Please select the URLs to test.")
             except Exception as e:
                 st.error("An unexpected error occurred. Please try again later.")
                 logging.error(f"Unexpected error during URL extraction: {e}")
                 return
         # Radio button for user to chosse test type
-        with st.form(key='test_choice_form', clear_on_submit=True):
+        test_form = st.form(key='test_choice_form', clear_on_submit=True)
+        #with st.form(key='test_choice_form', clear_on_submit=True):
+        with test_form:
             test_choice = st.radio(
-            "Select the URLs to test:",
+            f"Select the URLs to test from {len(extracted_urls)} URLs:",
             ('Test only homepage', 'Test all URLs', 'Select specific URLs'),
             index=None, # Default selection is 'None'
         )
@@ -131,8 +134,6 @@ def main():
                     urls = set()
                     urls.add(base_url)
                     logging.info(f"Starting accessibility Tests from: {base_url}")
-                    #parsed_url = urlparse(url)
-                    #homepage_url = f"{parsed_url.scheme}://{parsed_url.netloc}"
                     with st.spinner("Performing accessibility tests on the homepage"):
                         if urls:
                             results = tester.test_urls(urls)
