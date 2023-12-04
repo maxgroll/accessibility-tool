@@ -5,6 +5,7 @@ import csv
 import os
 import logging
 from typing import Dict
+from urllib.parse import urlparse
 
 class ResultsProcessor:
     """
@@ -29,11 +30,20 @@ class ResultsProcessor:
         self.results = results
         self.test_directory = test_directory
 
+    def _get_page_identifier(self) -> str:
+        """
+        Extracts a page-specific identifier from the URL.
+        """
+        parsed_url = urlparse(self.url)
+        page_name = parsed_url.path.strip('/').replace('/', '_') or 'homepage'
+        return page_name
+
     def save_results_to_json(self) -> None:
         """
         Saves the results in JSON format to the test directory.
         """
-        json_filename = os.path.join(self.test_directory, 'accessibility_test.json')
+        page_identifier = self._get_page_identifier()
+        json_filename = os.path.join(self.test_directory, f'{page_identifier}_accessibility_test.json')
         try:
             with open(json_filename, 'w') as json_file:
                 json.dump(self.results, json_file, indent=4)
@@ -44,7 +54,8 @@ class ResultsProcessor:
         """
         Saves the results in CSV format to the test directory.
         """
-        csv_filename = os.path.join(self.test_directory, 'accessibility_test.csv')
+        page_identifier = self._get_page_identifier()
+        csv_filename = os.path.join(self.test_directory, f'{page_identifier}_accessibility_test.csv')
         try:
             with open(csv_filename, 'w', newline='') as csv_file:
                 writer = csv.writer(csv_file)
@@ -62,8 +73,7 @@ class ResultsProcessor:
                         ])
         except IOError as e:
             logging.error(f"Error while saving CSV results for {self.url}: {e}")
-
-    
+  
 
 # Example usage
 if __name__ == "__main__":
