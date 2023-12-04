@@ -8,6 +8,7 @@ from typing import Dict, Optional, Set
 from .results_processor import ResultsProcessor
 from util import create_test_directory
 
+
 class AccessibilityTester:
     """
     A class to run accessibility tests on websites using Axe with Selenium.
@@ -40,22 +41,23 @@ class AccessibilityTester:
         Returns:
             Optional[Dict]: The results of the accessibility tests, or None if an error occurs.
         """
-
+        driver = None
         try:
             driver = webdriver.Chrome(options=self.chrome_options)
             driver.get(url)
             axe = Axe(driver)
             axe.inject()
             results = axe.run()
-            self.test_directory = create_test_directory(url)
             processor = ResultsProcessor(url, results, self.test_directory)
             processor.save_results_to_json()
             processor.save_results_to_csv()
-            driver.quit()
             return results
         except Exception as e:
             logging.error(f"Accessibility testing error for {url}: {e}")
             return None
+        finally:
+            if driver:
+                driver.quit()
 
     def test_urls(self, urls: Set[str]) -> Optional[Dict[str, Dict]]:
         """
@@ -67,6 +69,9 @@ class AccessibilityTester:
         Returns:
             Optional[Dict[str, Dict]]: A dictionary with URLs as keys and test results as values.
         """
+        # use first url to create test directory
+        self.test_directory = create_test_directory(next(iter(urls)))
+    
         results = {}
         for url in urls:
             result = self.run_accessibility_tests(url)
