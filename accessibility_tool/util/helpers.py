@@ -10,7 +10,6 @@ from urllib.robotparser import RobotFileParser
 
 from data.config import FULL_ACCESSIBILITY_RESULTS_DIRECTORY
 
-
 def is_url_accessible(url: str) -> bool:
     """Check if the given URL is accessible.
 
@@ -75,56 +74,74 @@ def is_valid_url(url: str, base_url: str, session: requests.Session) -> bool:
         bool: True if the URL is valid and points to a webpage, False otherwise.
     """
     parsed_url = urlparse(url)
+    cleaned_url = urlunparse((parsed_url.scheme, parsed_url.netloc, parsed_url.path, '', '', ''))
 
-    # Check if URL is valid
-    if not validators.url(parsed_url):
+    if not validators.url(cleaned_url):
+        logging.debug(f"URL failed validation: {url}")
         return False
 
-    # ignore URLs, that do not start with http or https
     if parsed_url.scheme not in ['http', 'https']:
+        logging.debug(f"URL scheme not supported: {url}")
         return False
 
-    # Ignore URLs with fragment or query parameters
     if parsed_url.fragment or parsed_url.query:
+        logging.debug(f"URL has fragment or query: {url}")
         return False
 
-    # Ignore URLs with unwanted extensions
     ignored_extensions = ['.pdf', '.jpg', 'jpeg', 'webp', '.png', '.svg', '.css', '.js', '.xml']
     if any(parsed_url.path.lower().endswith(ext) for ext in ignored_extensions):
+        logging.debug(f"URL has ignored extension: {url}")
         return False
     
-    # validate if URL starts with the base url
     if not url.startswith(base_url):
+        logging.debug(f"URL does not start with base URL: {url}")
         return False
 
-    # Check content type of URL to make shure only pages are passed to the tests
-    cleaned_url = urlunparse((parsed_url.scheme, parsed_url.netloc, parsed_url.path, '', '', ''))
     try:
         response = session.head(cleaned_url, allow_redirects=True, timeout=10)
         if 'text/html' not in response.headers.get('Content-Type', ''):
+            logging.debug(f"URL rejected due to content type: {url}")
             return False
     except requests.RequestException as e:
-        logging.warning(f"Failed to fetch URL headers: {e}")
+        logging.warning(f"Failed to fetch URL headers for {url}: {e}")
         return False
-
+    
     return True
+
 
 
 def can_fetch(url: str, user_agent: str = '*') -> bool:
     """
-    Checks if a URL can be fetched based on the website's robots.txt file.
+	    Checks if a URL can be fetched based on the website's robots.txt file.
 
-    Args:
-        url (str): The URL to check.
-        user_agent (str): The user agent of the crawler (default is '*').
+	    Args:
+	        url (str): The URL to check.
+	        user_agent (str): The user agent of the crawler (default is '*').
 
-    Returns:
-        bool: True if fetching the URL is allowed, False otherwise.
-    """
+	    Returns:
+	        bool: True if fetching the URL is allowed, False otherwise.
+	"""
     parsed_url = urlparse(url)
     robots_url = f"{parsed_url.scheme}://{parsed_url.netloc}/robots.txt"
-    rp = RobotFileParser(robots_url)
-    rp.set_url(robots_url)
-    rp.read()
+    rp = RobotFileParser()
 
-    return rp.can_fetch(user_agent, url)
+    # Fetch and log the contents of robots.txt
+    try:
+        response = requests.get(robots_url)
+        if response.status_code == 200:
+            #logging.info(f"Contents of robots.txt: {response.text}")
+            rp.parse(response.text.splitlines())
+        else:
+            logging.info(f"No robots.txt found at {robots_url}. Assuming crawling is allowed.")
+            return True
+    except requests.RequestException as e:
+        logging.error(f"Error fetching robots.txt: {e}")
+        return True  # Assume crawling is allowed if there's an error fetching robots.txt
+
+    # Check if fetching is allowed
+    allowed = rp.can_fetch(user_agent, url)
+    if not allowed:
+        logging.debug(f"Fetching disallowed by robots.txt: {url} for user-agent {user_agent}")
+    else:
+        logging.debug(f"Fetching allowed by robots.txt: {url} for user-agent {user_agent}")
+    return allowed
