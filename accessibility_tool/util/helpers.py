@@ -34,28 +34,20 @@ def is_url_accessible(url: str) -> bool:
 def create_test_directory(url: str) -> str:
     """
     Creates a nested directory structure for test results based on the given URL.
-    The structure will be: accessibility_results/domain/specific_page/timestamp/
-    
+    The structure will be: data/accessibility_tests/domain/timestamp/
+
     Args:
         url (str): The full URL for which to create the directory structure.
         
     Returns:
-        str: The path to the directory for the specific test.
+        str: The path to the directory for the specific test-session.
     """
-    # Parse the base domain from the URL
     parsed_url = urlparse(url)
     domain = parsed_url.netloc.replace('www.', '')
-    
-    # Create a directory-friendly name for the specific page
-    specific_page = parsed_url.path.strip('/').replace('/', '_') or 'homepage'
-    
-    # Create a timestamp for uniqueness
+
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    
-    # Combine all parts to create the nested directory structure
-    directory_path = os.path.join(FULL_ACCESSIBILITY_RESULTS_DIRECTORY, domain, specific_page, timestamp)
-    
-    # Create the directory if it doesn't exist
+
+    directory_path = os.path.join(FULL_ACCESSIBILITY_RESULTS_DIRECTORY, domain, timestamp)
     os.makedirs(directory_path, exist_ok=True)
     
     return directory_path
@@ -107,7 +99,6 @@ def is_valid_url(url: str, base_url: str, session: requests.Session) -> bool:
         return False
     
     return True
-
 
 
 def can_fetch(url: str, user_agent: str = '*') -> bool:
