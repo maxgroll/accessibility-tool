@@ -35,7 +35,8 @@ class ResultsProcessor:
         Extracts a page-specific identifier from the URL.
         """
         parsed_url = urlparse(self.url)
-        page_name = parsed_url.path.strip('/').replace('/', '_') or 'homepage'
+        domain_name = parsed_url.netloc.replace('www.', '').replace('.', '_')
+        page_name = parsed_url.path.strip('/').replace('/', '_') or domain_name
         return page_name
 
     def save_results_to_json(self) -> None:
