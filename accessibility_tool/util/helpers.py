@@ -136,3 +136,27 @@ def can_fetch(url: str, user_agent: str = '*') -> bool:
     else:
         logging.debug(f"Fetching allowed by robots.txt: {url} for user-agent {user_agent}")
     return allowed
+
+
+def get_latest_results_directory(base_results_directory):
+    domain_directories = os.listdir(base_results_directory)
+    latest_time = datetime.min
+    latest_directory = None
+
+    for domain_dir in domain_directories:
+        full_domain_path = os.path.join(base_results_directory, domain_dir)
+        if os.path.isdir(full_domain_path):  # Ensure it's a directory
+            # Get all timestamped directories within the domain directory
+            timestamps = [d for d in os.listdir(full_domain_path) if os.path.isdir(os.path.join(full_domain_path, d))]
+            for ts in timestamps:
+                # Parse the timestamp from the directory name
+                try:
+                    ts_time = datetime.strptime(ts, "%Y-%m-%d_%H-%M-%S")
+                    if ts_time > latest_time:
+                        latest_time = ts_time
+                        latest_directory = os.path.join(full_domain_path, ts)
+                except ValueError:
+                    # Handle directories that don't match the timestamp format
+                    continue
+    
+    return latest_directory
