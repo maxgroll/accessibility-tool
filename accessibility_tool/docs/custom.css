@@ -1,0 +1,14 @@
+/* Targeting the last link in the navigation for unique styling */
+.md-nav__link li:last_child {
+    font-weight: bold;
+    color: #052f5c; /* Change the color as needed */
+    padding-top:20px ;
+}
+
+/* Adding a separator above the last link */
+.md-nav__link li:last_child::before {
+    content: '';
+    display: block !important;
+    padding-top: 10px !important;
+    border-top: 2px solid #930d0d !important;
+}
