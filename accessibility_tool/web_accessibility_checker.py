@@ -11,9 +11,54 @@ from data.config import setup_directories, setup_logging
 from util import is_url_accessible
 from util import AccessibilityTester, WebsiteCrawler, SitemapParser
 
-#from util.sitemap_parser_ import SitemapParser
-#from accessibility_tool.util.website_crawler import WebsiteCrawler
+from util.accessibility_report_viewer import AccessibilityReportViewer
+from util.helpers import get_latest_results_directory
+import os
 
+def display_results_ui(latest_results_directory):
+    st.subheader('Accessibility Test Results', divider='grey')
+    logging.info(f"Getting accessibility test results from CSV and Json file for: {latest_results_directory}")
+    # Layout for the selectboxes
+    col1, col2 = st.columns(2)
+
+    with col1:
+    # Get all JSON result files in the latest results directory
+        json_result_files = [f for f in os.listdir(latest_results_directory) if f.endswith('.json')]
+        csv_result_files = [f for f in os.listdir(latest_results_directory) if f.endswith('.csv')]
+
+        # Display a selectbox for the user to choose which result file to view
+        selected_result_file = st.selectbox('Select a test result to view', json_result_files)
+
+    # Display the selected test result
+        if selected_result_file:
+            result_path = os.path.join(latest_results_directory, selected_result_file)
+            report_viewer = AccessibilityReportViewer(result_path)
+        
+        # Calculate and display the accessibility score
+            logging.info(f"Displaying score for {selected_result_file}")
+            score = report_viewer.calculate_accessibility_score()
+            st.metric(label="Accessibility Score", value=f"{score}%")
+            logging.info(f"Displaying violations for {selected_result_file}")
+            violations_df = report_viewer.create_violations_dataframe()
+            st.dataframe(violations_df)
+
+    with col2:
+        
+        # Display a selectbox for the user to choose which result file to download
+        st.write("Download Test Results")
+        download_file = st.selectbox('Select a test result to download', json_result_files + csv_result_files)
+        if download_file:
+            # Provide the download button for the selected file
+            file_path = os.path.join(latest_results_directory, download_file)
+            with open(file_path, "rb") as fp:
+                st.download_button(
+                    label="Download File",
+                    data=fp,
+                    file_name=download_file,
+                    mime="application/octet-stream"
+                )
+            if st.download_button:
+                logging.info(f"Downloading: {download_file}")
 
 # Setup logging and directories
 setup_directories()
@@ -31,8 +76,7 @@ def main():
     with header_container:
         logo = Image.open("static/digitalagenten_Logo_quer-2.png")
         st.image(logo, width=300)
-        title =  st.title = "Web Accessibility Checker"
-        st.header(title, divider='grey')
+        st.header("Web Accessibility Checker", divider='grey')
 
     st.markdown("""
         <style>
@@ -105,6 +149,10 @@ def main():
         if "choice_made" not in st.session_state:
             st.session_state.choice_made = False
 
+         # Initialize the show_tests state to False
+        if 'show_tests' not in st.session_state:
+                st.session_state.show_tests = False
+
         # Check if Button or enter key was clicked and validate URL
         if find_urls_button or url:
             # Check if provided URL is in session state and reset
@@ -147,6 +195,7 @@ def main():
                         st.info("Sitemap found. Extracting Urls for Accessibility Tests")
                     # TODO with st.spinner("Extracting URLs from sitemap"):
                         extracted_urls = sitemap_parser.get_sitemap_urls()
+                        logging.info(f"Extracted {len(extracted_urls)} URLs from {base_url}")
                         if not extracted_urls:  # If sitemap parsing returns an empty set
                             # If the sitemap can not be parsed fallback to crawl
                             with st.spinner("Sitemap index found but could not be parsed. Crawling for URLs"):
@@ -180,6 +229,7 @@ def main():
                 # Logic based on user's choice
                 if st.session_state.choice_made:
                     tester = AccessibilityTester()
+                    
                     if st.session_state.test_choice == 'Test all URLs':
                         # Logic to test all URLs
                         logging.info(f"Starting accessibility Tests from: {base_url}")
@@ -194,40 +244,66 @@ def main():
                                     st.error("An error occurred while checking the selected URLs.")
                             else:
                                 st.error("No URLs selected for testing.")
+            
+                        st.session_state.show_tests = True
+
 
                     if st.session_state.test_choice == 'Test only homepage':
-                            # Logic to test only the homepage
-                            urls = set()
-                            urls.add(base_url)
-                            logging.info(f"Starting accessibility Tests from: {base_url}")
-                            with st.spinner("Performing accessibility tests on the homepage"):
-                                if urls:
-                                    results = tester.test_urls(urls)
+                        # Logic to test only the homepage
+                        urls = set()
+                        urls.add(base_url)
+                        logging.info(f"Starting accessibility Tests from: {base_url}")
+                        with st.spinner("Performing accessibility tests on the homepage"):
+                            if urls:
+                                results = tester.test_urls(urls)
 
-                                if results:
-                                    st.success(f"Accessibility test for the homepage {base_url} completed")
-                                    logging.info(f"Finished accessibility Test from: {base_url}")
-                                else:
-                                    st.error("An error occurred while checking the homepage.")
-    with run_tests_container:
-        if st.session_state.extracted_urls and st.session_state.choice_made and st.session_state.test_choice == 'Select specific URLs':
+                            if results:
+                                st.success(f"Accessibility test for the homepage {base_url} completed")
+                                logging.info(f"Finished accessibility Test from: {base_url}")
+                            else:
+                                st.error("An error occurred while checking the homepage.")
+                       
+                        st.session_state.show_tests = True
+
+        with run_tests_container:
+            #if st.session_state.test_choice == 'Select specific URLs':
+        #####
+                #st.session_state.choice_made = True
+            if st.session_state.extracted_urls and st.session_state.choice_made and st.session_state.test_choice == 'Select specific URLs':
             # Show multiselect widget for selecting specific URLs
-            with run_tests_form:
-                selected_urls: List[str] = run_placeholder.multiselect("Select URLs to test", options=list(extracted_urls), default=None, placeholder="Choose URLs To Test")
+                with run_tests_form:
+                    selected_urls: List[str] = run_placeholder.multiselect("Select URLs to test", options=list(extracted_urls), default=None, placeholder="Choose URLs To Test")
             # Button to run tests on selected URLs
-            if run_tests_button:
-                logging.info(f"Starting accessibility Tests from: {base_url}")
-                with st.spinner("Performing accessibility tests"):
-                    if selected_urls:
-                        results = tester.test_urls(selected_urls)
+                if run_tests_button:
+                    logging.info(f"Starting accessibility Tests from: {base_url}")
+                    with st.spinner("Performing accessibility tests"):
+                        if selected_urls:
+                            results = tester.test_urls(selected_urls)
                     
-                        if results:
-                            st.success("Accessibility tests completed")
-                            logging.info(f"Finished accessibility Tests from: {base_url} \n {len(selected_urls)} URLs tested: {selected_urls}")
+                            if results:
+                                st.success("Accessibility tests completed")
+                                logging.info(f"Finished accessibility Tests from: {base_url} \n {len(selected_urls)} URLs tested: {selected_urls}")
+                            else:
+                                st.error("An error occurred while checking the selected URLs.")
                         else:
-                            st.error("An error occurred while checking the selected URLs.")
-                    else:
-                        st.error("No URLs selected for testing.")
+                            st.error("No URLs selected for testing.")
+                
+                    st.session_state.show_tests = True
+                    
+
+    # After all tests have been run and results are ready to be displayed:
+    if st.session_state.show_tests:
+        base_results_directory = 'data/accessibility_results'  # Update with actual path
+        latest_results_directory = get_latest_results_directory(base_results_directory)
+        display_results_ui(latest_results_directory)
+        # TODO if commented out this test runs even if i have tested just the homepage
+        # but with rerun if i interact with anything in the views panel
+        # if take it in, there are no reruns, but the choice for selecting urls
+        # does not work 
+        st.session_state.test_choice = 'Select specific URLs'
+        ###
+        #st.session_state.choice_made = False
+        
                 
 
 if __name__ == "__main__":
