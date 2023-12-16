@@ -1,0 +1,26 @@
+# mkdocs.yml
+
+site_name: Web Accessibility Checker
+theme:
+  name: 'material'
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          rendering:
+            show_source: true
+
+
+nav:
+  - Home: index.md
+  - WebsiteCrawler: website_crawler.md
+  - SitemapParser: sitemap_parser.md
+  - AccessibilityTester: accessibility_tester.md
+  - ResultsProcessor: results_processor.md
+  - ReportViewer: report_viewer.md
+  - Helpers : helpers.md
+  - User Handbook: user_handbook.md
+
+extra_css:
+  - 'custom.css'
