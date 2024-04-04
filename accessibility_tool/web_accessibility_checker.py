@@ -6,14 +6,24 @@ import streamlit as st
 from urllib.parse import urlparse
 from typing import List
 from PIL import Image
+import os
 
 from data.config import setup_directories, setup_logging
-from util import is_url_accessible
-from util import AccessibilityTester, WebsiteCrawler, SitemapParser
+from util import is_url_accessible, get_latest_results_directory
+from util import AccessibilityTester, WebsiteCrawler, SitemapParser, AccessibilityReportViewer
 
-from util.accessibility_report_viewer import AccessibilityReportViewer
-from util.helpers import get_latest_results_directory
-import os
+#####
+import json
+def extract_domain_and_page_from_json(json_file_path):
+    with open(json_file_path, 'r') as file:
+        data = json.load(file)
+        url = data.get('url', '')
+        parsed_url = urlparse(url)
+        # Extract the domain name and the page name/path from the URL
+        domain = parsed_url.netloc
+        path = parsed_url.path.rstrip('/').lstrip('/')
+        return f"{domain}/{path}" if path else domain
+####
 
 def display_results_ui(latest_results_directory):
     st.subheader('Accessibility Test Results', divider='grey')
@@ -26,19 +36,40 @@ def display_results_ui(latest_results_directory):
         json_result_files = [f for f in os.listdir(latest_results_directory) if f.endswith('.json')]
         csv_result_files = [f for f in os.listdir(latest_results_directory) if f.endswith('.csv')]
 
+        ######
+        # Create a mapping from the display name to the file path
+        display_names_to_file_paths = {
+            extract_domain_and_page_from_json(os.path.join(latest_results_directory, file_name)): file_name
+            for file_name in json_result_files
+        }
+
+        # Sort the display names alphabetically
+        sorted_display_names = sorted(display_names_to_file_paths.keys())
         # Display a selectbox for the user to choose which result file to view
-        selected_result_file = st.selectbox('Select a test result to view', json_result_files)
+        selected_display_name = st.selectbox('Select a test result to view', options=sorted_display_names)
+        
+        # Get the selected file path
+        selected_file_path = os.path.join(latest_results_directory, display_names_to_file_paths[selected_display_name]) if selected_display_name else None
+
+        # Display the selected test result
+        if selected_file_path:
+            report_viewer = AccessibilityReportViewer(selected_file_path)
+        #####
+
+
+        # Display a selectbox for the user to choose which result file to view
+        #selected_result_file = st.selectbox('Select a test result to view', json_result_files)
 
     # Display the selected test result
-        if selected_result_file:
-            result_path = os.path.join(latest_results_directory, selected_result_file)
-            report_viewer = AccessibilityReportViewer(result_path)
+        #if selected_result_file:
+            #result_path = os.path.join(latest_results_directory, selected_result_file)
+            #report_viewer = AccessibilityReportViewer(result_path)
         
         # Calculate and display the accessibility score
-            logging.info(f"Displaying score for {selected_result_file}")
+            logging.info(f"Displaying score for {selected_display_name}")
             score = report_viewer.calculate_accessibility_score()
             st.metric(label="Accessibility Score", value=f"{score}%")
-            logging.info(f"Displaying violations for {selected_result_file}")
+            logging.info(f"Displaying violations for {selected_display_name}")
             violations_df = report_viewer.create_violations_dataframe()
             st.dataframe(violations_df)
 
@@ -46,7 +77,14 @@ def display_results_ui(latest_results_directory):
         
         # Display a selectbox for the user to choose which result file to download
         st.write("Download Test Results")
-        download_file = st.selectbox('Select a test result to download', json_result_files + csv_result_files)
+
+
+        options = [''] + json_result_files + csv_result_files
+# Use the index of the empty string or placeholder to make it the default selection
+        download_file = st.selectbox('Select a test result to download', options, index=0)
+
+
+        #download_file = st.selectbox('Select a test result to download', '' + json_result_files + csv_result_files)
         if download_file:
             # Provide the download button for the selected file
             file_path = os.path.join(latest_results_directory, download_file)
@@ -57,8 +95,15 @@ def display_results_ui(latest_results_directory):
                     file_name=download_file,
                     mime="application/octet-stream"
                 )
-            if st.download_button:
-                logging.info(f"Downloading: {download_file}")
+                if 'download_initiated' not in st.session_state:
+                    st.session_state.download_initiated = False
+
+
+                if st.download_button:
+                    st.session_state.download_initiated = True  # Flag that a download was initiated
+                if st.session_state.download_initiated:
+                    logging.info(f"Downloading: {download_file}")
+                    st.session_state.download_initiated = False  # Reset the flag after logging
 
 # Setup logging and directories
 setup_directories()
