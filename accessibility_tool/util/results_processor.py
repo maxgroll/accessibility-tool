@@ -60,8 +60,24 @@ class ResultsProcessor:
         try:
             with open(csv_filename, 'w', newline='') as csv_file:
                 writer = csv.writer(csv_file)
+                ############
+                writer.writerow(['VIOLATIONS', ' ',' ',' ',' ',' ',' '])
                 writer.writerow(['URL', 'ID', 'Impact', 'Help', 'HTML', 'Target', 'Help URL'])
                 for violation in self.results['violations']:
+                    for node in violation['nodes']:
+                        writer.writerow([
+                            self.url,
+                            violation['id'],
+                            violation['impact'],
+                            violation['help'],
+                            node['html'],
+                            " | ".join(node['target']),
+                            violation['helpUrl']
+                        ])
+
+                writer.writerow(['INCOMPLETE', ' ',' ',' ',' ',' ',' '])
+                writer.writerow(['URL', 'ID', 'Impact', 'Help', 'HTML', 'Target', 'Help URL'])
+                for violation in self.results['incomplete']:
                     for node in violation['nodes']:
                         writer.writerow([
                             self.url,
