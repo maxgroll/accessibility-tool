@@ -4,3 +4,4 @@ __pycache__/
 accessibility_results/
 logs/
 test_functions_unused/
+new_accessibility_checker.py
