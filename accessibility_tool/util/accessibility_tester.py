@@ -3,6 +3,8 @@
 import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from axe_selenium_python import Axe
 from typing import Dict, Optional, Set
 from .results_processor import ResultsProcessor
@@ -26,8 +28,8 @@ class AccessibilityTester:
         """
         self.test_directory = " "
         self.chrome_options = Options()
-        self.chrome_options.add_argument("--headless")
         self.chrome_options.add_argument("--no-sandbox")
+        self.chrome_options.add_argument("--headless")
         self.chrome_options.add_argument("--disable-dev-shm-usage")
 
 
@@ -43,7 +45,8 @@ class AccessibilityTester:
         """
         driver = None
         try:
-            driver = webdriver.Chrome(options=self.chrome_options)
+            driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=self.chrome_options)
+            #driver = webdriver.Chrome(options=self.chrome_options)
             driver.get(url)
             axe = Axe(driver)
             axe.inject()
