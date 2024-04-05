@@ -16,3 +16,4 @@ mypy==1.7.0
 mypy-extensions==1.0.0
 numpy==1.26.2
 webdriver-manager
+pytest==7.4.3
