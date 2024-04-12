@@ -8,7 +8,7 @@ from typing import List
 from PIL import Image
 import os
 
-from data.config import setup_directories, setup_logging
+from config import setup_directories, setup_logging
 from util import is_url_accessible, get_latest_results_directory
 from util import AccessibilityTester, WebsiteCrawler, SitemapParser, AccessibilityReportViewer
 
@@ -119,7 +119,13 @@ def main():
     """
     header_container = st.container()
     with header_container:
-        logo = Image.open("static/digitalagenten_Logo_quer-2.png")
+        # Get the directory of the current script
+        base_path = os.path.dirname(__file__)
+
+        # Construct the path to the image file
+        image_path = os.path.join(base_path, "static", "digitalagenten_Logo_quer-2.png")
+        logo = Image.open(image_path)
+        #logo = Image.open("static/digitalagenten_Logo_quer-2.png")
         st.image(logo, width=300)
         st.header("Web Accessibility Checker", divider='grey')
 

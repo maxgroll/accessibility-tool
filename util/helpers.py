@@ -8,7 +8,7 @@ from datetime import datetime
 from urllib.parse import urlparse, urlunparse
 from urllib.robotparser import RobotFileParser
 
-from data.config import FULL_ACCESSIBILITY_RESULTS_DIRECTORY
+from config import FULL_ACCESSIBILITY_RESULTS_DIRECTORY
 
 def is_url_accessible(url: str) -> bool:
     """Check if the given URL is accessible.
