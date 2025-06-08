@@ -1,6 +1,6 @@
 venv/
 accessibility_env/
-ally_env
+ally_env/
 __pycache__/
 .DS_Store
 accessibility_results/
