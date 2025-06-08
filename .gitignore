@@ -1,5 +1,6 @@
 venv/
 accessibility_env/
+ally_env
 __pycache__/
 .DS_Store
 accessibility_results/
@@ -14,3 +15,4 @@ npm-debug.log
 
 # Local axe-core directory
 axe-core/
+.streamlit/secrets.toml
