@@ -181,23 +181,16 @@ class UIComponents:
                     index=None
                 )
 
-                axe_version = st.radio(
-                    "Choose Axe version for testing:",
-                    ('Axe 3.1.1', 'Latest Version'),
-                    horizontal=True, 
-                    index=None
-                )
-
                 choice_made_button = st.form_submit_button(label='Confirm Choice')
 
             if choice_made_button:
                 st.session_state.choice_made = True
                 st.session_state.test_choice = test_choice
-                st.session_state.axe_version = axe_version
+                st.session_state.axe_version = "latest"
 
             if st.session_state.choice_made:
                 if 'tester' not in st.session_state:
-                    st.session_state.tester = AccessibilityTester(st.session_state.axe_version)
+                    st.session_state.tester = AccessibilityTester()
 
                 if st.session_state.test_choice == 'Test all URLs':
                     self.perform_tests(st.session_state.tester, st.session_state.extracted_urls)
@@ -261,7 +254,7 @@ class UIComponents:
         logging.info(f"Starting accessibility Tests from: {st.session_state.previous_url}")
         with st.spinner("Performing accessibility tests"):
             if urls:
-                tester = AccessibilityTester(st.session_state.axe_version)#
+                tester = AccessibilityTester()#
                 results,axe_version = tester.test_urls(urls)
                 if results:
                     st.success(f"Accessibility tests completed using Axe-Core version: {axe_version}")
