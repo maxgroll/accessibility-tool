@@ -1,4 +1,4 @@
-# results_processor.py
+# util/results_processor.py
 
 import json
 import csv
@@ -60,37 +60,91 @@ class ResultsProcessor:
         try:
             with open(csv_filename, 'w', newline='') as csv_file:
                 writer = csv.writer(csv_file)
-                ############
-                writer.writerow(['VIOLATIONS', ' ',' ',' ',' ',' ',' '])
-                writer.writerow(['URL', 'ID', 'Impact', 'Help', 'HTML', 'Target', 'Help URL'])
+                
+                writer.writerow(['VIOLATIONS', ' ',' ',' ',' ',' ',' ',' ', ' ', ' ', ' '])
+                writer.writerow([self.url, ' ',' ',' ',' ',' ',' ',' ', ' ', ' ', ' '])
+                writer.writerow(['ID', 'description', 'Impact', 'Help', 'HTML', 'Target', 'Help URL', 'Tags', 'Failure Summary', 'Data', 'Url'])
                 for violation in self.results['violations']:
+                # Joining tags list into a single string separated by commas
+                    tags = ", ".join(violation.get('tags', []))
                     for node in violation['nodes']:
-                        writer.writerow([
-                            self.url,
-                            violation['id'],
-                            violation['impact'],
-                            violation['help'],
-                            node['html'],
-                            " | ".join(node['target']),
-                            violation['helpUrl']
-                        ])
+                        # Extract data from the "any" list inside the node
+                        #any_list = node.get('any', [])
+                        data_list = []
+                        # Function to process the data
+                        def process_data(item):
+                            data = item.get('data')
+                            if data is None:
+                                data_list.append(item.get('id'))
+                            elif isinstance(data, list):
+                                data_list.extend(data)
+                            elif isinstance(data, dict):
+                                data_list.append(" | ".join(f"{k}: {v}" for k, v in data.items()))
+                            elif isinstance(data, str):
+                                data_list.append(data)
 
-                writer.writerow(['INCOMPLETE', ' ',' ',' ',' ',' ',' '])
-                writer.writerow(['URL', 'ID', 'Impact', 'Help', 'HTML', 'Target', 'Help URL'])
-                for violation in self.results['incomplete']:
-                    for node in violation['nodes']:
+                        # Check the 'any' list
+                        if node.get('any'):
+                            for item in node['any']:
+                                process_data(item)
+
+                        # Check the 'all' list
+                        if node.get('all'):
+                            for item in node['all']:
+                                process_data(item)
+
+                        # Check the 'none' list (if applicable)
+                        if node.get('none'):
+                            for item in node['none']:
+                                process_data(item)
+
+                        # If data_list is still empty, append "No data available"
+                        if not data_list:
+                            data_list.append("No data available")
+            
+                        # Join the data elements into a single string
+                        flattened_data = " | ".join(data_list)
+
+                        # Ensure all items in 'target' are strings and flatten any nested lists
+                        targets = node.get('target', [])
+                        flattened_targets = " | ".join([str(target) for sublist in targets for target in (sublist if isinstance(sublist, list) else [sublist])])
+
                         writer.writerow([
-                            self.url,
                             violation['id'],
+                            violation['description'],
                             violation['impact'],
                             violation['help'],
                             node['html'],
-                            " | ".join(node['target']),
-                            violation['helpUrl']
+                            flattened_targets,
+                            ###" | ".join(node['target']),
+                            violation['helpUrl'],
+                            tags,
+                            node['failureSummary'],
+                            flattened_data,
+                            self.url
                         ])
+                # TODO  write another csv for the incomplete tests?
+                #writer.writerow(['INCOMPLETE', ' ',' ',' ',' ',' ',' ',' '])
+                #writer.writerow([self.url, ' ',' ',' ',' ',' ',' ',' '])
+                #writer.writerow(['ID', 'description', 'Impact', 'Help', 'HTML', 'Target', 'Help URL', 'Tags'])
+               # for violation in self.results['incomplete']:
+                # Joining tags list into a single string separated by commas
+                    #tags = ", ".join(violation.get('tags', []))
+                    #for node in violation['nodes']:
+                       
+                        #writer.writerow([
+                            #violation['id'],
+                            #violation['description'],
+                            #violation['impact'],
+                            #violation['help'],
+                            #node['html'],
+                            #" | ".join(node['target']),
+                            #violation['helpUrl'],
+                            #tags
+                        #])
         except IOError as e:
             logging.error(f"Error while saving CSV results for {self.url}: {e}")
-  
+ 
 
 # Example usage
 if __name__ == "__main__":

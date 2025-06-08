@@ -6,10 +6,9 @@ from bs4 import BeautifulSoup
 from typing import Set
 import logging
 
-from util.helpers import is_valid_url, can_fetch
-#from helpers import is_valid_url, can_fetch
+from .helper_functions import HelperFunctions
+from config.constants import USER_AGENT
 
-#logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 class WebsiteCrawler:
     """
     A class to crawl a website and gather all accessible URLs.
@@ -20,16 +19,28 @@ class WebsiteCrawler:
         root_url (str): The base URL of the website to crawl.
         crawled_urls (Set[str]): A set of URLs found during crawling.
         hostname (str): The hostname of the root URL.
+        user_agent (str): The user agent string to use for requests.
+        session (requests.Session): A session object for making HTTP requests.
     """
 
     def __init__(self, root_url: str, user_agent: str = '*'):
+        """
+        Initializes the WebsiteCrawler with the root URL and user agent.
+
+        Args:
+            root_url (str): The base URL of the website to crawl.
+            user_agent (str, optional): The user agent string to use for requests. Defaults to '*'.
+        """
         self.root_url = root_url
         self.crawled_urls: Set[str] = set()
         self.hostname = urlparse(root_url).hostname
         self.user_agent = user_agent
         self.session = requests.Session()  # Session for repeated requests
+####
+        self.session.headers.update({"User-Agent": USER_AGENT})
+    ######    
     
-    def crawl(self, url: str, max_depth: int = 3, current_depth: int = 0) -> None:
+    def crawl(self, url: str, max_depth: int = 6, current_depth: int = 0) -> None:
         """
         Recursively crawl a website starting from a root URL up to a maximum depth.
 
@@ -44,9 +55,8 @@ class WebsiteCrawler:
         #logging.info(f"Crawling URL: {url} at depth {current_depth}")
         if current_depth > max_depth:
             return
-        
-        if is_valid_url(url, self.root_url, self.session) and can_fetch(url, self.user_agent):
-        #if is_valid_url(url, self.root_url, self.session):
+        ###### added self.session to can-fetch
+        if HelperFunctions.is_valid_url(url, self.root_url, self.session) and HelperFunctions.can_fetch(url, self.user_agent, self.session):
        
             try:
                 response = self.session.get(url)
@@ -66,7 +76,7 @@ class WebsiteCrawler:
                         if new_url not in self.crawled_urls:
                             self.crawl(new_url, max_depth, current_depth + 1)
             except requests.RequestException as e:
-                logging.info(f"Error crawling URL {url}: {e}")
+                logging.error(f"Error crawling URL {url}: {e}")
 
     def get_crawled_urls(self) -> Set[str]:
         """
@@ -88,9 +98,16 @@ class WebsiteCrawler:
         Returns:
             Set[str]: A set of URLs crawled up to the specified depth.
         """
-        #logging.info(f"Starting crawl for {url} with depth {crawl_depth}")
-        self.crawl(url, max_depth=crawl_depth)
-        logging.info(f"Crawling {url} finished with {len(self.crawled_urls)} URLs found")
+        try:
+            #logging.info(f"Starting crawl for {url} with depth {crawl_depth}")
+            self.crawl(url, max_depth=crawl_depth)
+            logging.info(f"Crawling {url} finished with {len(self.crawled_urls)} URLs found")
+        except Exception as e:
+            logging.error(f"Unexpected error during crawling: {e}")
+        finally:
+            self.session.close()  # Close the session to release resources
+            logging.info("Session closed after crawling.")
+
         return self.get_crawled_urls()
 
 

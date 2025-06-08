@@ -8,3 +8,9 @@ test_functions_unused/
 new_accessibility_checker.py
 .vscode/
 tests/
+# Node.js
+node_modules/
+npm-debug.log
+
+# Local axe-core directory
+axe-core/
