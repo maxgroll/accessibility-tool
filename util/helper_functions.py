@@ -454,15 +454,6 @@ class HelperFunctions:
         return latest_directory
     
     @staticmethod
-    #def fetch_latest_axe() -> str:
-       # r = requests.get(AXE_CDN_LATEST, timeout=10)
-        #r.raise_for_status()
-        #tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".js")
-        #tmp.write(r.content)
-        #tmp.close()
-        #logging.info(f"Fetched latest axe-core to {tmp.name}")
-        #with open(tmp.name, "r", encoding="utf-8") as fh:
-            #return fh.read()
     def fetch_latest_axe() -> str:
         """
         Download and return the newest axe.min.js script as a text string.
