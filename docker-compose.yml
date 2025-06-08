@@ -1,16 +1,36 @@
 # docker-compose
-version: '3.8'  # It's recommended to use a string for the version
+#version: '3.8'  # It's recommended to use a string for the version
+
+#services:
+  #accessibility_app:
+    #container_name: accessibility_app
+    #build: .
+    #ports:
+     # - "8501:8501"
+    #volumes:
+     # - ./host_data:/app/data
+    #environment:
+     # - NAME=World
+     # - TZ=Europe/Berlin
+     # - DOCKER_ENV=true  #new
+    #restart: unless-stopped
+
+version: "3.9"           # current stable schema
 
 services:
   accessibility_app:
+    image: a11y-tool:latest        # will be built locally unless already pulled
+    build: .                       # comment out when you only want to pull
     container_name: accessibility_app
-    build: .
     ports:
       - "8501:8501"
     volumes:
+      # Persist results outside the container
       - ./host_data:/app/data
     environment:
-      - NAME=World
-      - TZ=Europe/Berlin
-      - DOCKER_ENV=true  #new
+      TZ: Europe/Berlin
+      DOCKER_ENV: "true"           # consumed in code if needed
+      # --- optional local login credentials ---
+      # A11Y_USER: devuser
+      # A11Y_PASS: devpass
     restart: unless-stopped
