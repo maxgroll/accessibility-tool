@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from urllib.parse import urljoin, urlparse
 from typing import Optional, Set
 
+from config.constants import USER_AGENT
 
 class SitemapParser:
     """
@@ -22,9 +23,14 @@ class SitemapParser:
         'checkout', 'customer', 'collections', 'products', 'app', 'site'
     ]
 
-    def __init__(self, base_url: str):
+    #def __init__(self, base_url: str):
+    def __init__(self, base_url: str, session: Optional[requests.Session] = None):
         self.base_url = base_url
         self.sitemap_urls: Set[str] = set()
+        ########
+        self.session = session or requests.Session()
+        self.session.headers.update({"User-Agent": USER_AGENT})
+    ######
 
     def fetch_sitemap(self, sitemap_url: str) -> Optional[bytes]:
         """
@@ -35,9 +41,11 @@ class SitemapParser:
             if parsed_url.query:
                 base_url = urljoin(sitemap_url, urlparse(sitemap_url).path)
                 params = dict(param.split('=') for param in urlparse(sitemap_url).query.split('&'))
-                response = requests.get(base_url, params=params, timeout=10)
+                #response = requests.get(base_url, params=params, timeout=10)
+                response = self.session.get(base_url, params=params, timeout=10)
             else:
-                response = requests.get(sitemap_url, timeout=10)
+                #response = requests.get(sitemap_url, timeout=10)
+                response = self.session.get(sitemap_url, timeout=10)
 
             if response.status_code == 200:
                 return response.content
@@ -55,7 +63,8 @@ class SitemapParser:
         """
         robots_url = urljoin(self.base_url, 'robots.txt')
         try:
-            response = requests.get(robots_url, timeout=10)
+            #response = requests.get(robots_url, timeout=10)
+            response = self.session.get(robots_url, timeout=10)
             if response.status_code == 200:
                 for line in response.text.split('\n'):
                     if line.startswith('Sitemap: '):
