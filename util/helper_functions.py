@@ -5,11 +5,12 @@ import logging
 import validators
 import streamlit as st
 import requests
+import tempfile
 from urllib.parse import urlparse, urlunparse
 from urllib.robotparser import RobotFileParser
 from datetime import datetime
 from typing import Optional
-from config import setup_directories, setup_logging, FULL_ACCESSIBILITY_RESULTS_DIRECTORY
+from config import setup_directories, setup_logging, FULL_ACCESSIBILITY_RESULTS_DIRECTORY, AXE_CDN_LATEST, CDNJS_AXE_API
 
 
 
@@ -133,7 +134,7 @@ class HelperFunctions:
 
             # Immediately send URL for testing
             if 'tester' not in st.session_state:
-                st.session_state.tester = AccessibilityTester(st.session_state.axe_version)
+                st.session_state.tester = AccessibilityTester()
             st.session_state.show_tests = True
             st.session_state.choice_made = True
             st.session_state.test_choice = 'Test only homepage'
@@ -452,6 +453,37 @@ class HelperFunctions:
 
         return latest_directory
     
+    @staticmethod
+    #def fetch_latest_axe() -> str:
+       # r = requests.get(AXE_CDN_LATEST, timeout=10)
+        #r.raise_for_status()
+        #tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".js")
+        #tmp.write(r.content)
+        #tmp.close()
+        #logging.info(f"Fetched latest axe-core to {tmp.name}")
+        #with open(tmp.name, "r", encoding="utf-8") as fh:
+            #return fh.read()
+    def fetch_latest_axe() -> str:
+        """
+        Download and return the newest axe.min.js script as a text string.
+        Steps:
+        1. Query cdnjs for the latest axe-core version.
+        2. Build the exact CDN URL for that version.
+        3. Download axe.min.js and return its content.
+        Raises `requests.HTTPError` if either request fails.
+    """
+        # ── 1) get latest version ─────────────────────────────────────────
+        meta = requests.get(CDNJS_AXE_API, timeout=8)
+        meta.raise_for_status()
+        version = meta.json()["version"]          # e.g. "4.10.3"
+        logging.info("Latest axe-core version: %s", version)
 
+        # ── 2) build URL & fetch script ───────────────────────────────────
+        axe_url = AXE_CDN_LATEST.format(version=version)
+        r = requests.get(axe_url, timeout=8)
+        r.raise_for_status()
+        logging.info("Downloaded axe.min.js (%d bytes)", len(r.content))
+
+        return r.text            # full JavaScript source
 
     
