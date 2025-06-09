@@ -1,9 +1,10 @@
 # data/config.py
 
-import os
 import logging
+import os
 from datetime import datetime
-from .constants import FULL_LOGS_DIRECTORY, FULL_ACCESSIBILITY_RESULTS_DIRECTORY
+
+from .constants import FULL_ACCESSIBILITY_RESULTS_DIRECTORY, FULL_LOGS_DIRECTORY
 
 
 def setup_logging() -> None:

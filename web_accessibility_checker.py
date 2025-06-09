@@ -1,10 +1,11 @@
 # web_accessibility_checker.py
 
 import streamlit as st
+
 from util.helper_functions import HelperFunctions
+from util.sitemap_parser import SitemapParser
 from util.ui_components import UIComponents
 from util.website_crawler import WebsiteCrawler
-from util.sitemap_parser import SitemapParser
 
 # Setup logging and directories
 HelperFunctions.initialize_logging_and_directories()

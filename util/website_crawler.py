@@ -1,13 +1,15 @@
 # website_crawler.py
 
-from urllib.parse import urlparse, urljoin
+import logging
+from urllib.parse import urljoin, urlparse
+
 import requests
 from bs4 import BeautifulSoup
-from typing import Set
-import logging
+
+from config.constants import USER_AGENT
 
 from .helper_functions import HelperFunctions
-from config.constants import USER_AGENT
+
 
 class WebsiteCrawler:
     """
@@ -32,7 +34,7 @@ class WebsiteCrawler:
             user_agent (str, optional): The user agent string to use for requests. Defaults to '*'.
         """
         self.root_url = root_url
-        self.crawled_urls: Set[str] = set()
+        self.crawled_urls: set[str] = set()
         self.hostname = urlparse(root_url).hostname
         self.user_agent = user_agent
         self.session = requests.Session()  # Session for repeated requests
@@ -78,7 +80,7 @@ class WebsiteCrawler:
             except requests.RequestException as e:
                 logging.error(f"Error crawling URL {url}: {e}")
 
-    def get_crawled_urls(self) -> Set[str]:
+    def get_crawled_urls(self) -> set[str]:
         """
         Get the set of crawled URLs.
 
@@ -87,7 +89,7 @@ class WebsiteCrawler:
         """
         return self.crawled_urls
 
-    def crawl_urls_to_test(self, url: str, crawl_depth: int) -> Set[str]:
+    def crawl_urls_to_test(self, url: str, crawl_depth: int) -> set[str]:
         """
         Initiates crawling from the given URL up to the specified depth.
 

@@ -1,5 +1,6 @@
 # config/constants.py
 import os
+
 # basic path to data folder
 DATA_DIRECTORY = "data"
 

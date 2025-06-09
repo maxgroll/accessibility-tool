@@ -1,12 +1,13 @@
 # util/sitemap_parser.py
 
-import requests
 import logging
 import xml.etree.ElementTree as ET
 from urllib.parse import urljoin, urlparse
-from typing import Optional, Set
+
+import requests
 
 from config.constants import USER_AGENT
+
 
 class SitemapParser:
     """
@@ -24,15 +25,15 @@ class SitemapParser:
     ]
 
     #def __init__(self, base_url: str):
-    def __init__(self, base_url: str, session: Optional[requests.Session] = None):
+    def __init__(self, base_url: str, session: requests.Session | None = None):
         self.base_url = base_url
-        self.sitemap_urls: Set[str] = set()
+        self.sitemap_urls: set[str] = set()
         ########
         self.session = session or requests.Session()
         self.session.headers.update({"User-Agent": USER_AGENT})
     ######
 
-    def fetch_sitemap(self, sitemap_url: str) -> Optional[bytes]:
+    def fetch_sitemap(self, sitemap_url: str) -> bytes | None:
         """
         Fetches the sitemap from a given URL.
         """
@@ -57,7 +58,7 @@ class SitemapParser:
             logging.error(f"An error occurred while parsing the sitemap URL: {e}")
         return None
 
-    def fetch_sitemap_from_robots(self) -> Optional[str]:
+    def fetch_sitemap_from_robots(self) -> str | None:
         """
         Fetches sitemap URL from the robots.txt file of the base_url domain.
         """
@@ -147,7 +148,7 @@ class SitemapParser:
                     return True
         return False # No sitemaps found or parse error encountered
 
-    def get_sitemap_urls(self) -> Set[str]:
+    def get_sitemap_urls(self) -> set[str]:
         """
         Returns the set of URLs found in the sitemap.
         """

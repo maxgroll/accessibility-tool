@@ -1,19 +1,18 @@
 # util/accessibility_tester.py
 import logging
 import os
-from typing import Dict, Optional, Set
 
 import streamlit as st
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 
-from util.results_processor import ResultsProcessor
 from util.helper_functions import HelperFunctions
+from util.results_processor import ResultsProcessor
 
 
 class AccessibilityTester:
@@ -67,7 +66,7 @@ class AccessibilityTester:
         """Inject the downloaded axe.min.js into the current page."""
         self.driver.execute_script(self._axe_script)
 
-    def _run_for_url(self, url: str) -> Optional[Dict]:
+    def _run_for_url(self, url: str) -> dict | None:
         """
         Navigate to `url`, inject axe, run audit, save JSON/CSV.
         Returns (results_json, axe_version) or None on failure.
@@ -103,7 +102,7 @@ class AccessibilityTester:
     # ------------------------------------------------------------------ #
     # Public API                                                         #
     # ------------------------------------------------------------------ #
-    def test_urls(self, urls: Set[str]):
+    def test_urls(self, urls: set[str]):
         """
         Run axe on each URL in `urls`.
         Returns (result_dict, axe_version) or (None, None) if nothing succeeded.

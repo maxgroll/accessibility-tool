@@ -1,11 +1,11 @@
 # util/results_processor.py
 
-import json
 import csv
-import os
+import json
 import logging
-from typing import Dict
+import os
 from urllib.parse import urlparse
+
 
 class ResultsProcessor:
     """
@@ -17,7 +17,7 @@ class ResultsProcessor:
         test_directory (str): The directory to save the test results.
     """
 
-    def __init__(self, url: str, results: Dict, test_directory: str):
+    def __init__(self, url: str, results: dict, test_directory: str):
         """
         Initializes the ResultsProcessor with URL, results, and test directory.
 
@@ -48,7 +48,7 @@ class ResultsProcessor:
         try:
             with open(json_filename, 'w') as json_file:
                 json.dump(self.results, json_file, indent=4)
-        except IOError as e:
+        except OSError as e:
             logging.error(f"Error while saving JSON results for {self.url}: {e}")
 
     def save_results_to_csv(self) -> None:
@@ -142,7 +142,7 @@ class ResultsProcessor:
                             #violation['helpUrl'],
                             #tags
                         #])
-        except IOError as e:
+        except OSError as e:
             logging.error(f"Error while saving CSV results for {self.url}: {e}")
  
 

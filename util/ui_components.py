@@ -1,15 +1,16 @@
 # util/ui_components
 
-import streamlit as st
-import plotly.graph_objects as go
-from PIL import Image
-import os
 import logging
-from typing import List, Set
+import os
+
+import plotly.graph_objects as go
+import streamlit as st
+from PIL import Image
 
 from util.accessibility_report_viewer import AccessibilityReportViewer
 from util.accessibility_tester import AccessibilityTester
 from util.helper_functions import HelperFunctions
+
 
 class UIComponents:
     """
@@ -243,7 +244,7 @@ class UIComponents:
 
         self.display_download_options(latest_results_directory, selected_file_path)
 
-    def perform_tests(self, tester: AccessibilityTester, urls: Set[str]) -> None:
+    def perform_tests(self, tester: AccessibilityTester, urls: set[str]) -> None:
         """
         Perform accessibility tests on the given URLs.
 
@@ -275,7 +276,7 @@ class UIComponents:
         """
         with st.form(key='run_tests_form', clear_on_submit=True):
             #st.subheader("Select URLs to test", divider="grey")
-            selected_urls: List[str] = st.multiselect("Select URLs to test", options=list(st.session_state.extracted_urls), default=None, placeholder="Choose URLs To Test")
+            selected_urls: list[str] = st.multiselect("Select URLs to test", options=list(st.session_state.extracted_urls), default=None, placeholder="Choose URLs To Test")
             run_tests_button_pressed = st.form_submit_button(label='Run Accessibility Tests')
         if run_tests_button_pressed:
             self.perform_tests(tester, set(selected_urls))

@@ -1,5 +1,7 @@
 import json
+
 import pandas as pd
+
 
 class AccessibilityReportViewer:
     def __init__(self, json_file):

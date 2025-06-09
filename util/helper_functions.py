@@ -1,17 +1,22 @@
 # helper_functions.py
 import json
-import os
 import logging
-import validators
-import streamlit as st
-import requests
-import tempfile
+import os
+from datetime import datetime
 from urllib.parse import urlparse, urlunparse
 from urllib.robotparser import RobotFileParser
-from datetime import datetime
-from typing import Optional
-from config import setup_directories, setup_logging, FULL_ACCESSIBILITY_RESULTS_DIRECTORY, AXE_CDN_LATEST, CDNJS_AXE_API
 
+import requests
+import streamlit as st
+import validators
+
+from config import (
+    AXE_CDN_LATEST,
+    CDNJS_AXE_API,
+    FULL_ACCESSIBILITY_RESULTS_DIRECTORY,
+    setup_directories,
+    setup_logging,
+)
 
 
 class HelperFunctions:
@@ -69,7 +74,7 @@ class HelperFunctions:
         Returns:
             str: A formatted string of the domain and page path.
         """
-        with open(json_file_path, 'r') as file:
+        with open(json_file_path) as file:
             data = json.load(file)
             url = data.get('url', '')
             parsed_url = urlparse(url)
@@ -217,7 +222,7 @@ class HelperFunctions:
                     with st.spinner("Sitemap index found but could not be parsed. Crawling for URLs"):
                         extracted_urls = crawler.crawl_urls_to_test(base_url, crawl_depth)
             else:
-                logging.info(f"No sitemap found or user chose to crawl: Crawling for URLs started")
+                logging.info("No sitemap found or user chose to crawl: Crawling for URLs started")
                 with st.spinner("Crawling for URLs"):
                     extracted_urls = crawler.crawl_urls_to_test(base_url, crawl_depth)
 
@@ -267,7 +272,7 @@ class HelperFunctions:
 
     @staticmethod
     #def is_url_accessible(url: str) -> bool:
-    def is_url_accessible(url: str, session: Optional[requests.Session] = None) -> bool:
+    def is_url_accessible(url: str, session: requests.Session | None = None) -> bool:
         """
         Check if the given URL is accessible.
 
@@ -398,7 +403,7 @@ class HelperFunctions:
         #return allowed
 
     @staticmethod
-    def can_fetch(url: str, user_agent: str = '*', session: Optional[requests.Session] = None) -> bool:
+    def can_fetch(url: str, user_agent: str = '*', session: requests.Session | None = None) -> bool:
         parsed_url = urlparse(url)
         robots_url = f"{parsed_url.scheme}://{parsed_url.netloc}/robots.txt"
         rp = RobotFileParser()
@@ -423,7 +428,7 @@ class HelperFunctions:
 
 
     @staticmethod
-    def get_latest_results_directory(base_results_directory: str) -> Optional[str]:
+    def get_latest_results_directory(base_results_directory: str) -> str | None:
         """
         Get the latest results directory based on the timestamped directories.
 
