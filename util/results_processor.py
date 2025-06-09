@@ -69,33 +69,23 @@ class ResultsProcessor:
                     tags = ", ".join(violation.get('tags', []))
                     for node in violation['nodes']:
                         # Extract data from the "any" list inside the node
-                        #any_list = node.get('any', [])
-                        data_list = []
+                        data_list: list[str] = []
                         # Function to process the data
-                        def process_data(item):
+                        #def process_data(item):
+                        def process_data(item, _d=data_list) -> None:
                             data = item.get('data')
                             if data is None:
-                                data_list.append(item.get('id'))
+                                _d.append(item.get('id'))
                             elif isinstance(data, list):
-                                data_list.extend(data)
+                                _d.extend(data)
                             elif isinstance(data, dict):
-                                data_list.append(" | ".join(f"{k}: {v}" for k, v in data.items()))
+                                _d.append(" | ".join(f"{k}: {v}" for k, v in data.items()))
                             elif isinstance(data, str):
-                                data_list.append(data)
+                                _d.append(data)
 
-                        # Check the 'any' list
-                        if node.get('any'):
-                            for item in node['any']:
-                                process_data(item)
-
-                        # Check the 'all' list
-                        if node.get('all'):
-                            for item in node['all']:
-                                process_data(item)
-
-                        # Check the 'none' list (if applicable)
-                        if node.get('none'):
-                            for item in node['none']:
+                        # Check the 'any', 'all', 'none' lists (if present)
+                        for key in ("any", "all", "none"):
+                            for item in node.get(key, []):
                                 process_data(item)
 
                         # If data_list is still empty, append "No data available"
@@ -116,7 +106,6 @@ class ResultsProcessor:
                             violation['help'],
                             node['html'],
                             flattened_targets,
-                            ###" | ".join(node['target']),
                             violation['helpUrl'],
                             tags,
                             node['failureSummary'],
