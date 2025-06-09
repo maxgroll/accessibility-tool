@@ -22,3 +22,8 @@ axe-core/
 .mypy_cache/
 .ruff_cache/
 
+
+# local lint reports
+ruff_report*.txt
+mypy_report*.txt
+pylint_report*.txt
