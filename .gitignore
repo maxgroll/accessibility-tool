@@ -17,3 +17,8 @@ npm-debug.log
 # Local axe-core directory
 axe-core/
 .streamlit/secrets.toml
+
+# lint caches
+.mypy_cache/
+.ruff_cache/
+
