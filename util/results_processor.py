@@ -139,8 +139,9 @@ class ResultsProcessor:
 if __name__ == "__main__":
     # Assume some results are obtained from accessibility testing
     url = "https://example.com"
-    results = {}  # Placeholder for actual results
-    test_directory = "/path/to/directory"
+    from typing import Any
+    results: dict[str, Any] = {}  # Placeholder for actual Axe results
+    test_directory: str = "/path/to/directory"
     processor = ResultsProcessor(url, results, test_directory)
     processor.save_results_to_json()
     processor.save_results_to_csv()
